@@ -3,7 +3,6 @@ import React from 'react';
 
 function AddColumnModal({ showModal, setShowModal, newColumn, handleInputChange, handleSubmit }) {
     if (!showModal) return null; // Return null if modal is not visible
-
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
             <div className="bg-gray-800 p-1 rounded-lg">

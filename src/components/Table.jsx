@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import AddColumnModal from './AddColumnModal';
 import DeleteModal from './DeleteModal';
+import PopupComponent from './PopupComponent';
+
 
 function Table({ products, setProducts }) {
     const [columns, setColumns] = useState([
@@ -18,11 +20,15 @@ function Table({ products, setProducts }) {
     // State for tracking the clicked cell and edited value
     const [editableProduct, setEditableProduct] = useState(null);
     const [editedValue, setEditedValue] = useState('');
+    console.log('editableProduct:', editableProduct);
+    console.log('editedValue:', editedValue)
     const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
 
     // Filter state
     const [filterPopupVisible, setFilterPopupVisible] = useState(null); // Track if popup is visible for a column
     const [filterCriteria, setFilterCriteria] = useState({ contains: '', doesntContain: '' }); // Filter criteria
+
+    const [errorMessage, setErrorMessage] = useState('');
 
     const handleAddColumn = () => {
         setShowModal(true);
@@ -70,12 +76,70 @@ function Table({ products, setProducts }) {
         });
     };
 
-    const handleModalSave = () => {
+    const handleResetValue = () => {
         if (editableProduct) {
             const updatedProducts = products.map((p) =>
-                p === editableProduct.product ? { ...p, [editableProduct.field]: editedValue } : p
+                p === editableProduct.product ? { ...p, [editableProduct.field]: null } : p
             );
             setProducts(updatedProducts);
+            handleModalCancel(); // Optionally close the popup after resetting
+        }
+    };
+
+    // const handleModalSave = () => {
+    //     if (editableProduct) {
+    //         const updatedProducts = products.map((p) =>
+    //             p === editableProduct.product ? { ...p, [editableProduct.field]: editedValue } : p
+    //         );
+    //         setProducts(updatedProducts);
+    //         setEditableProduct(null);
+    //         setEditedValue('');
+    //     }
+    // };
+    // const handleModalSave = () => {
+    //     if (editableProduct) {
+    //         // Restrict input to integers for price column
+    //         const newValue = editableProduct.field === 'price' ?
+    //             (parseInt(editedValue, 10) || '') :
+    //             editedValue;
+
+    //         const updatedProducts = products.map((p) =>
+    //             p === editableProduct.product ? { ...p, [editableProduct.field]: newValue } : p
+    //         );
+    //         setProducts(updatedProducts);
+    //         setEditableProduct(null);
+    //         setEditedValue('');
+    //     }
+    // };
+    const handleModalSave = () => {
+        if (editableProduct) {
+            // Check if the field being edited is 'price'
+            if (editableProduct.field === 'price') {
+                const newValue = parseInt(editedValue, 10);
+
+                // Check if the parsed value is a valid number
+                if (isNaN(newValue)) {
+                    setErrorMessage('Only integers are allowed.'); // Set error message
+                    return; // Exit the function without making changes
+                }
+
+                // If valid, clear the error message
+                setErrorMessage('');
+                // Update the product with the new integer value
+                const updatedProducts = products.map((p) =>
+                    p === editableProduct.product ? { ...p, [editableProduct.field]: newValue } : p
+                );
+                setProducts(updatedProducts);
+            } else {
+                // If not price, just update the value normally
+                setErrorMessage('');
+                const updatedProducts = products.map((p) =>
+                    p === editableProduct.product ? { ...p, [editableProduct.field]: editedValue } : p
+                );
+                setProducts(updatedProducts);
+            }
+
+            // Reset editable product and input
             setEditableProduct(null);
             setEditedValue('');
         }
@@ -83,6 +147,7 @@ function Table({ products, setProducts }) {
 
     const handleModalCancel = () => {
         setEditableProduct(null);
+        setErrorMessage('');
     };
 
     // Toggle the filter popup for a column
@@ -95,16 +160,6 @@ function Table({ products, setProducts }) {
         setFilterCriteria((prev) => ({ ...prev, [name]: value }));
     };
 
-    // const handleFilterApply = (columnField) => {
-    //     const filteredProducts = products.filter(product => {
-    //         const value = product[columnField]?.toLowerCase();
-    //         const containsMatch = !filterCriteria.contains || value.includes(filterCriteria.contains.toLowerCase());
-    //         const doesntContainMatch = !filterCriteria.doesntContain || !value.includes(filterCriteria.doesntContain.toLowerCase());
-    //         return containsMatch && doesntContainMatch;
-    //     });
-    //     setProducts(filteredProducts);
-    //     setFilterPopupVisible(null);
-    // };
     const handleFilterApply = (columnField) => {
         const filteredProducts = products.filter(product => {
             const value = product[columnField]?.toLowerCase();
@@ -126,11 +181,10 @@ function Table({ products, setProducts }) {
         setFilterPopupVisible(null);
     };
 
-
     return (
-        <div className="relative overflow-x-auto shadow-md mt-16 bg-black">
-            <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
+        <div className="relative overflow-x-auto shadow-md mt-7 bg-black">
+            <table className="w-60 text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400 ml-5">
+                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400 ">
                     <tr>
                         <th scope="col" className="p-4 border-r border-gray-200 dark:border-gray-700">#</th>
                         {columns.map((col, index) => (
@@ -213,33 +267,20 @@ function Table({ products, setProducts }) {
             </table>
 
             {/* Small Editable Popup */}
+
+
             {editableProduct && (
-                <div
-                    className="fixed z-20 bg-gray-950 p-3 rounded shadow-lg"
-                    style={{ top: `${popupPosition.y}px`, left: `${popupPosition.x}px` }}
-                >
-                    <input
-                        type="text"
-                        value={editedValue}
-                        onChange={(e) => setEditedValue(e.target.value)}
-                        className="border border-gray-300 p-2 w-40"
-                    />
-                    <div className="mt-2 flex justify-between space-x-2">
-                        <button
-                            onClick={handleModalSave}
-                            className="bg-blue-500 px-4 py-1 rounded text-white hover:bg-blue-600"
-                        >
-                            Save
-                        </button>
-                        <button
-                            onClick={handleModalCancel}
-                            className="bg-gray-500 px-4 py-1 rounded text-white hover:bg-gray-600"
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </div>
+                <PopupComponent
+                    popupPosition={popupPosition}
+                    editedValue={editedValue}
+                    setEditedValue={setEditedValue}
+                    handleModalSave={handleModalSave}
+                    handleModalCancel={handleModalCancel}
+                    handleResetValue={handleResetValue}
+                    errorMessage={errorMessage}
+                />
             )}
+
 
             <AddColumnModal
                 showModal={showModal}
@@ -254,7 +295,7 @@ function Table({ products, setProducts }) {
                 handleClose={closeDeleteModal}
                 handleDelete={handleDelete}
             />
-        </div>
+        </div >
     );
 }
 
