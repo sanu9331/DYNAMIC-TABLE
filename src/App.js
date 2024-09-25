@@ -12,9 +12,9 @@ function App() {
   //   { name: "iPhone 12", color: "White", category: "Smartphone", price: "$999" },
   // ]);
   const [products, setProducts] = useState([
-    { name: "https//www.neutrogena.com/product/", color: "Neutrogena Hydro Boost Water Gel", category: "Moisturizer", price: "$16.99" },
-    { name: "https//www.Cerave.com/product/", color: "CeraVe Hydrating Cleanser", category: "Cleanser", price: "$12.99" },
-    { name: "https//www.Ordinary.com/product/", color: "The Ordinary Retinol 0.5% in Squalane", category: "Serum", price: "$9.80" },
+    { name: "https//www.neutrogena.com/product/", color: "Neutrogena Hydro Boost Water Gel", category: "Moisturizer", price: "16.99" },
+    { name: "https//www.Cerave.com/product/", color: "CeraVe Hydrating Cleanser", category: "Cleanser", price: "12.99" },
+    { name: "https//www.Ordinary.com/product/", color: "The Ordinary Retinol 0.5% in Squalane", category: "Serum", price: "9.80" },
   ]);
 
 
